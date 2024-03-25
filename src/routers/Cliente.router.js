@@ -1,12 +1,13 @@
 import express from "express"
 import db from "../config/db.js"
-import { QueryTypes } from "sequelize"
+import Cliente from "../models/Cliente.model.js"
+import Categoria from "../models/Categoria.model.js"
 
 const router = express.Router()
 
 router.get("/", async (req, res) => {
   try {
-    const [clientes] = await db.query("select * from clientes")
+    const clientes = await Cliente.findAll()
     res.json({ clientes })
   } catch (error) {
     res.status(500).json({ message: "Server error" })
@@ -19,12 +20,9 @@ router.get("/:id", async (req, res) => {
 
     if (!id) return res.status(403).json({ message: "Id faltando" })
 
-    const [cliente] = await db.query("select * from clientes where id = ?", {
-      replacements: [id],
-      type: QueryTypes.SELECT,
-    })
+    const cliente = await Cliente.findByPk(id)
 
-    if (!cliente || cliente.length === 0)
+    if (!cliente)
       return res.status(404).json({ message: "Cliente não encontrado" })
 
     res.json({ cliente })
@@ -41,13 +39,7 @@ router.post("/", async (req, res) => {
     if (!nome || !email || !endereco || !telefone)
       return res.status(401).json({ message: "Dados faltando" })
 
-    await db.query(
-      "insert into clientes (nome, email, endereco, telefone) values (?, ?, ?, ?)",
-      {
-        replacements: [nome, email, endereco, telefone],
-        type: QueryTypes.INSERT,
-      }
-    )
+    await Cliente.create(req.body)
     res.json({ message: "Cliente criado com sucesso!" })
   } catch (error) {
     console.log(error)
@@ -62,24 +54,14 @@ router.put("/:id", async (req, res) => {
 
     if (!id) return res.status(403).json({ message: "Id faltando" })
 
-    const [cliente] = await db.query("select * from clientes where id = ?", {
-      replacements: [id],
-      type: QueryTypes.SELECT,
-    })
-
-    if (!cliente || cliente.length === 0)
+    const cliente = await Cliente.findByPk(id)
+    if (!cliente)
       return res.status(404).json({ message: "Cliente não encontrado" })
 
-    await db.query(
-      "update clientes set nome = ?, email = ?, endereco = ?, telefone = ? where id = ?",
-      {
-        replacements: [nome, email, endereco, telefone, id],
-        type: QueryTypes.UPDATE,
-      }
-    )
-
+    await Cliente.update(req.body, { where: { id } })
     res.json({ message: "Cliente atualizado com sucesso!" })
   } catch (error) {
+    console.log(error)
     res.status(500).json("Server error")
   }
 })
@@ -90,17 +72,13 @@ router.delete("/:id", async (req, res) => {
 
     if (!id) return res.status(403).json({ message: "Id faltando" })
 
-    const [cliente] = await db.query(`select * from clientes where id = ${id}`)
-
-    if (!cliente || cliente.length === 0)
+    const cliente = await Cliente.findByPk(id)
+    if (!cliente)
       return res.status(404).json({ message: "Cliente não encontrado" })
 
-    await db.query("delete from clientes where id = ?", {
-      replacements: [id],
-      type: QueryTypes.DELETE,
-    })
-
+    await Cliente.destroy({ where: { id } })
     res.json({ message: "Cliente deletado com sucesso!" })
+    
   } catch (error) {
     res.status(500).json({ message: "Server error" })
   }
