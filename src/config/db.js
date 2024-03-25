@@ -9,7 +9,7 @@ const db = new Sequelize({
   host: "localhost",
   port: 3306,
   define: {
-    timestamps: true,
+    timestamps: false,
     charset: "utf8",
     dialectOptions: {
       collate: "utf8_general_ci",

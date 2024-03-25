@@ -1,14 +1,16 @@
 import express from "express"
 import db from "../config/db.js"
 import { QueryTypes } from "sequelize"
+import Categoria from "../models/Categoria.model.js"
 
 const router = express.Router()
 
 router.get("/", async (req, res) => {
   try {
-    const [categorias] = await db.query("select * from categorias")
+    const categorias = await Categoria.findAll({ raw: true })
     res.json(categorias)
   } catch (error) {
+    console.log(error)
     res.status(500).json({ message: "Server error" })
   }
 })
@@ -19,16 +21,9 @@ router.get("/:id", async (req, res) => {
 
     if (!id) return res.status(403).json({ message: "Id faltando" })
 
-    // encontrando categoria
-    const [categoria] = await db.query(
-      "select * from categorias where id = ?",
-      {
-        replacements: [id],
-        type: QueryTypes.SELECT,
-      }
-    )
+    const categoria = await Categoria.findByPk(id)
 
-    if (!categoria || categoria.length === 0)
+    if (!categoria)
       return res.status(404).json({ message: "Categoria não encontrada" })
 
     res.json(categoria)
@@ -50,6 +45,9 @@ router.post("/", async (req, res) => {
       replacements: [nome, descricao],
       type: QueryTypes.INSERT,
     })
+
+    await Categoria.create(req.body)
+
     res.json({ message: "Categoria criada com sucesso!" })
   } catch (error) {
     console.log(error)
@@ -60,32 +58,21 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const id = req.params.id
-    const { nome, descricao } = req.body
 
     if (!id) return res.status(403).json({ message: "Id faltando" })
 
     // encontrando categoria
-    const [categoria] = await db.query(
-      "select * from categorias where id = ?",
-      {
-        replacements: [id],
-        type: QueryTypes.SELECT,
-      }
-    )
-    if (!categoria || categoria.length === 0)
+    const categoria = await Categoria.findByPk(id)
+
+    if (!categoria)
       return res.status(404).json({ message: "Categoria não encontrada" })
 
     // atualizando categoria
-    await db.query(
-      "update categorias set nome = ?, descricao = ? where id = ?",
-      {
-        replacements: [nome, descricao, id],
-        type: QueryTypes.UPDATE,
-      }
-    )
+    await Categoria.update(req.body, { where: { id } })
 
     res.json({ message: "Categoria atualizada com sucesso" })
   } catch (error) {
+    console.log(error)
     res.status(500).json({ message: "Server error" })
   }
 })
@@ -98,14 +85,9 @@ router.delete("/:id", async (req, res) => {
       return res.status(403).json({ message: "Id da categoria está faltando" })
 
     // encontrando categoria
-    const [categoria] = await db.query(
-      "select * from categorias where id = ?",
-      {
-        replacements: [id],
-        type: QueryTypes.SELECT,
-      }
-    )
-    if (!categoria || categoria.length === 0)
+    const categoria = await Categoria.findByPk(id)
+
+    if (!categoria)
       return res.status(404).json({ message: "Categoria não encontrada" })
 
     // removendo categoria
@@ -113,6 +95,8 @@ router.delete("/:id", async (req, res) => {
       replacements: [id],
       type: QueryTypes.DELETE,
     })
+
+    await Categoria.destroy({ where: { id } })
 
     res.json({ message: "Categoria deletada com sucesso!" })
   } catch (error) {
