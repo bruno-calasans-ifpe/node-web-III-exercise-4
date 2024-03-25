@@ -1,9 +1,9 @@
 import { DataTypes } from "sequelize"
-import db from "../config/db"
-import Produto from "./Produto.model"
-import Pedido from "./Pedido.model"
+import db from "../config/db.js"
+import Produto from "./Produto.model.js"
+import Pedido from "./Pedido.model.js"
 
-const ItemPedido = db.define("item_pedidos", {
+const ItemPedido = db.define("itenspedido", {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -17,14 +17,7 @@ const ItemPedido = db.define("item_pedidos", {
   },
 })
 
-Produto.hasMany(ItemPedido)
-ItemPedido.belongsTo(Produto, {
-  foreignKey: "id_produto",
-})
-
-Pedido.hasMany(ItemPedido)
-ItemPedido.belongsTo(Pedido, {
-  foreignKey: "id_pedido",
-})
+ItemPedido.belongsTo(Produto, { foreignKey: "id_produto" })
+ItemPedido.belongsTo(Pedido, { foreignKey: "id_pedido" })
 
 export default ItemPedido
