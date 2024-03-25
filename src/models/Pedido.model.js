@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize"
-import db from "../config/db"
-import Cliente from "./Cliente.model"
+import db from "../config/db.js"
+import Cliente from "./Cliente.model.js"
 
 const Pedido = db.define("pedidos", {
   id: {
@@ -16,7 +16,6 @@ const Pedido = db.define("pedidos", {
   },
 })
 
-Cliente.hasMany(Pedido)
 Pedido.belongsTo(Cliente, { foreignKey: "id_cliente" })
 
 export default Pedido

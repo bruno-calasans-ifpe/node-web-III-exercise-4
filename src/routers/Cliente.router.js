@@ -21,7 +21,6 @@ router.get("/:id", async (req, res) => {
     if (!id) return res.status(403).json({ message: "Id faltando" })
 
     const cliente = await Cliente.findByPk(id)
-
     if (!cliente)
       return res.status(404).json({ message: "Cliente não encontrado" })
 

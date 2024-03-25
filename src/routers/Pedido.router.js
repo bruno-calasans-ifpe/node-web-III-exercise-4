@@ -1,12 +1,13 @@
 import express from "express"
 import db from "../config/db.js"
-import { QueryTypes } from "sequelize"
+import Pedido from "../models/Pedido.model.js"
+import Cliente from "../models/Cliente.model.js"
 
 const router = express.Router()
 
 router.get("/", async (req, res) => {
   try {
-    const [pedidos] = await db.query("select * from pedidos")
+    const pedidos = await Pedido.findAll()
     res.json({ pedidos })
   } catch (error) {
     res.status(500).json({ message: "Server error" })
@@ -19,17 +20,13 @@ router.get("/:id", async (req, res) => {
 
     if (!id) return res.status(403).json({ message: "Id faltando" })
 
-    const [pedido] = await db.query("select * from pedidos where id = ?", {
-      replacements: [id],
-      type: QueryTypes.SELECT,
-    })
-
-    if (!pedido || pedido.length === 0)
-      return res.status(404).json({ message: "pedido não encontrado" })
+    // encontrando pedido
+    const pedido = await Pedido.findByPk(id)
+    if (!pedido)
+      return res.status(404).json({ message: "Pedido não encontrado" })
 
     res.json({ pedido })
   } catch (error) {
-    console.log(error)
     res.status(500).json({ message: "Server error" })
   }
 })
@@ -41,21 +38,16 @@ router.post("/", async (req, res) => {
     if (!id_cliente || !status)
       return res.status(401).json({ message: "Dados faltando" })
 
-    const [cliente] = await db.query("select * from clientes where id = ?", {
-      replacements: [id_cliente],
-      type: QueryTypes.SELECT,
-    })
+    // encontrando cliente
+    const cliente = await Cliente.findByPk(id_cliente)
+    if (!cliente)
+      return res.status(404).json({ message: "Cliente não encontrado" })
 
-    if (!cliente || cliente.length === 0)
-      return res.status(401).json({ message: "Cliente não encontrado" })
+    // colocando a data do pedido
+    req.body.data_pedido = new Date()
 
-    await db.query(
-      "insert into pedidos (id_cliente, data_pedido, status) values (?, ?, ?)",
-      {
-        replacements: [id_cliente, new Date(), status],
-        type: QueryTypes.INSERT,
-      }
-    )
+    // criando pedido
+    await Pedido.create(req.body)
     res.json({ message: "pedido criado com sucesso!" })
   } catch (error) {
     console.log(error)
@@ -70,29 +62,18 @@ router.put("/:id", async (req, res) => {
 
     if (!id) return res.status(403).json({ message: "Id faltando" })
 
-    const [cliente] = await db.query("select * from clientes where id = ?", {
-      replacements: [id_cliente],
-      type: QueryTypes.SELECT,
-    })
+    // encontrando cliente
+    const cliente = await Cliente.findByPk(id_cliente)
+    if (!cliente)
+      return res.status(404).json({ message: "Cliente não encontrado" })
 
-    if (!cliente || cliente.length === 0)
-      return res.status(401).json({ message: "Cliente não encontrado" })
+    // encontrando pedido
+    const pedido = await Pedido.findByPk(id)
+    if (!pedido)
+      return res.status(404).json({ message: "Pedido não encontrado" })
 
-    const [pedido] = await db.query("select * from pedidos where id = ?", {
-      replacements: [id],
-      type: QueryTypes.SELECT,
-    })
-
-    if (!pedido || pedido.length === 0)
-      return res.status(404).json({ message: "pedido não encontrado" })
-
-    await db.query(
-      "update pedidos set id_cliente = ?, data_pedido = ?, status = ? where id = ?",
-      {
-        replacements: [id_cliente, new Date(), status, id],
-        type: QueryTypes.INSERT,
-      }
-    )
+    // atualizando pedido
+    await Pedido.update(req.body, { where: { id } })
 
     res.json({ message: "pedido atualizado com sucesso!" })
   } catch (error) {
@@ -107,22 +88,16 @@ router.delete("/:id", async (req, res) => {
 
     if (!id) return res.status(403).json({ message: "Id faltando" })
 
-    const [pedido] = await db.query("select * from pedidos where id = ?", {
-      replacements: [id],
-      type: QueryTypes.SELECT,
-    })
+    // encontrando pedido
+    const pedido = await Pedido.findByPk(id)
+    if (!pedido)
+      return res.status(404).json({ message: "Pedido não encontrado" })
 
-    if (!pedido || pedido.length === 0)
-      return res.status(404).json({ message: "pedido não encontrado" })
+    // removendo pedido
+    await Pedido.destroy({ where: { id } })
 
-    await db.query("delete from pedidos where id = ?", {
-      replacements: [id],
-      type: QueryTypes.DELETE,
-    })
-
-    res.json({ message: "pedido deletado com sucesso!" })
+    res.json({ message: "Pedido deletado com sucesso!" })
   } catch (error) {
-    console.log(error)
     res.status(500).json({ message: "Server error" })
   }
 })
