@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize"
-import db from "../config/db"
-import Categoria from "./Categoria.model"
+import db from "../config/db.js"
+import Categoria from "./Categoria.model.js"
 
 const Produto = db.define("produtos", {
   id: {
@@ -20,7 +20,6 @@ const Produto = db.define("produtos", {
   },
 })
 
-Produto.hasMany(Categoria, { foreignKey: "id_categoria" })
-Categoria.belongsTo(Produto)
+Categoria.hasOne(Produto, { foreignKey: "id_categoria" })
 
 export default Produto
